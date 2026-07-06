@@ -1,10 +1,10 @@
 @import 'tailwindcss';
 
 :root {
-  color: #17211c;
-  background: #f7f8f3;
+  color: #f8f6ff;
+  background: #09112f;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Trebuchet MS", Nunito, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -21,4 +21,240 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+.loop-scene {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(167, 120, 255, 0.34), transparent 28rem),
+    radial-gradient(circle at 80% 12%, rgba(127, 213, 255, 0.28), transparent 24rem),
+    radial-gradient(circle at 70% 80%, rgba(255, 130, 200, 0.22), transparent 26rem),
+    linear-gradient(180deg, #090f2d 0%, #15164c 48%, #2f2369 100%);
+}
+
+.loop-scene::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.92) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(255, 230, 138, 0.7) 0 1px, transparent 1.5px);
+  background-position:
+    0 0,
+    36px 42px;
+  background-size:
+    92px 92px,
+    128px 128px;
+  opacity: 0.58;
+}
+
+.game-object {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  width: min(100%, 156px);
+  min-width: 138px;
+  min-height: 92px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 4px solid rgba(255, 255, 255, 0.62);
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-align: center;
+  box-shadow:
+    0 12px 0 rgba(23, 14, 57, 0.72),
+    0 24px 46px rgba(0, 0, 0, 0.32),
+    inset 0 2px 0 rgba(255, 255, 255, 0.5);
+  transition:
+    transform 180ms ease,
+    filter 180ms ease,
+    box-shadow 180ms ease;
+  animation: float-slow 5.2s ease-in-out infinite;
+}
+
+.game-object:hover {
+  transform: translateY(-6px) scale(1.05);
+  filter: saturate(1.08) brightness(1.08);
+  box-shadow:
+    0 16px 0 rgba(23, 14, 57, 0.72),
+    0 30px 58px rgba(0, 0, 0, 0.38),
+    0 0 26px rgba(255, 230, 138, 0.45),
+    inset 0 2px 0 rgba(255, 255, 255, 0.62);
+}
+
+.play-object {
+  border-color: #2b1745;
+  border-radius: 26px;
+  background: linear-gradient(135deg, #ffe68a 0%, #ffb86c 52%, #ff82c8 100%);
+}
+
+.star-object {
+  flex-direction: column;
+  width: min(100%, 158px);
+  min-width: 150px;
+  min-height: 142px;
+  padding: 1.3rem 0.9rem;
+  background: linear-gradient(135deg, #ffe68a 0%, #ffb86c 100%);
+  clip-path: polygon(50% 0%, 61% 32%, 96% 32%, 68% 52%, 79% 88%, 50% 66%, 21% 88%, 32% 52%, 4% 32%, 39% 32%);
+}
+
+.hex-object {
+  flex-direction: column;
+  width: min(100%, 154px);
+  min-width: 150px;
+  background: linear-gradient(135deg, #735dff 0%, #ff82c8 100%);
+  clip-path: polygon(24% 0%, 76% 0%, 100% 50%, 76% 100%, 24% 100%, 0% 50%);
+}
+
+.cloud-object,
+.settings-object {
+  min-width: 152px;
+  border-color: rgba(255, 255, 255, 0.74);
+  border-radius: 999px;
+}
+
+.cloud-object {
+  background: linear-gradient(135deg, #e9f6ff 0%, #9edcff 100%);
+}
+
+.settings-object {
+  background: linear-gradient(135deg, #e7d6ff 0%, #ffb5dc 100%);
+}
+
+.logo-orb {
+  animation: float-logo 6s ease-in-out infinite;
+}
+
+.cloud {
+  position: absolute;
+  width: 150px;
+  height: 54px;
+  border-radius: 999px;
+  background: rgba(224, 243, 255, 0.86);
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.18));
+  opacity: 0.78;
+  animation: cloud-drift 18s ease-in-out infinite;
+}
+
+.cloud::before,
+.cloud::after {
+  position: absolute;
+  content: "";
+  border-radius: 50%;
+  background: inherit;
+}
+
+.cloud::before {
+  left: 26px;
+  top: -28px;
+  width: 62px;
+  height: 62px;
+}
+
+.cloud::after {
+  right: 24px;
+  top: -18px;
+  width: 52px;
+  height: 52px;
+}
+
+.cloud-one {
+  left: 7%;
+  top: 17%;
+}
+
+.cloud-two {
+  right: 8%;
+  top: 25%;
+  width: 190px;
+  animation-delay: -6s;
+}
+
+.cloud-three {
+  left: 42%;
+  bottom: 12%;
+  width: 125px;
+  opacity: 0.48;
+  animation-delay: -10s;
+}
+
+.twinkle {
+  animation: twinkle 2.8s ease-in-out infinite;
+}
+
+.float-slow {
+  animation: float-slow 5.5s ease-in-out infinite;
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -10px;
+  }
+}
+
+@keyframes float-logo {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+
+  50% {
+    transform: translateY(-12px) rotate(1deg);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+
+@keyframes cloud-drift {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(24px);
+  }
+}
+
+@media (max-width: 640px) {
+  .game-object {
+    width: min(100%, 136px);
+    min-width: 132px;
+    min-height: 82px;
+    font-size: 0.78rem;
+  }
+
+  .star-object {
+    width: min(100%, 136px);
+    min-width: 136px;
+    min-height: 126px;
+    padding: 1.1rem 0.7rem;
+  }
+
+  .hex-object {
+    width: min(100%, 136px);
+  }
+
+  .cloud {
+    opacity: 0.5;
+    transform: scale(0.78);
+  }
 }
