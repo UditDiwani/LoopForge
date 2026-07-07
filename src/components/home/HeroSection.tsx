@@ -41,9 +41,10 @@ export function HeroSection() {
           <Link
             to="/leaderboard"
             className="game-object star-object order-2 justify-self-center text-[#27133f] sm:order-1 sm:mt-10"
+            aria-label="Leaderboard"
           >
             <Trophy aria-hidden="true" size={28} />
-            <span>Leaderboard</span>
+            <span>Standings</span>
           </Link>
 
           <div className="logo-orb order-1 col-span-2 mx-auto flex aspect-square w-[min(78vw,340px)] flex-col items-center justify-center rounded-full border-[6px] border-[#ffe68a] bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,#ffd8fb_18%,#a778ff_49%,#402778_78%,#241341_100%)] p-8 text-center shadow-[0_0_45px_rgba(255,230,138,0.45),0_24px_70px_rgba(0,0,0,0.42)] sm:order-2 sm:col-span-1">

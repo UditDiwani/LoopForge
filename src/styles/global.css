@@ -84,6 +84,10 @@ a {
     inset 0 2px 0 rgba(255, 255, 255, 0.62);
 }
 
+.star-object:hover {
+  filter: drop-shadow(0 0 22px rgba(255, 230, 138, 0.72)) saturate(1.08) brightness(1.08);
+}
+
 .play-object {
   border-color: #2b1745;
   border-radius: 26px;
@@ -97,6 +101,12 @@ a {
   min-height: 142px;
   padding: 1.3rem 0.9rem;
   background: linear-gradient(135deg, #ffe68a 0%, #ffb86c 100%);
+  filter: drop-shadow(0 0 18px rgba(255, 230, 138, 0.64));
+  box-shadow:
+    0 12px 0 rgba(23, 14, 57, 0.72),
+    0 24px 46px rgba(0, 0, 0, 0.32),
+    0 0 30px rgba(255, 230, 138, 0.52),
+    inset 0 2px 0 rgba(255, 255, 255, 0.5);
   clip-path: polygon(50% 0%, 61% 32%, 96% 32%, 68% 52%, 79% 88%, 50% 66%, 21% 88%, 32% 52%, 4% 32%, 39% 32%);
 }
 
@@ -104,8 +114,9 @@ a {
   flex-direction: column;
   width: min(100%, 154px);
   min-width: 150px;
+  border-color: rgba(255, 255, 255, 0.74);
+  border-radius: 28px;
   background: linear-gradient(135deg, #735dff 0%, #ff82c8 100%);
-  clip-path: polygon(24% 0%, 76% 0%, 100% 50%, 76% 100%, 24% 100%, 0% 50%);
 }
 
 .cloud-object,
@@ -247,6 +258,7 @@ a {
     min-width: 136px;
     min-height: 126px;
     padding: 1.1rem 0.7rem;
+    filter: drop-shadow(0 0 14px rgba(255, 230, 138, 0.64));
   }
 
   .hex-object {
