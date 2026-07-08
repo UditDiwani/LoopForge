@@ -1,8 +1,7 @@
 import { ArrowRight, Gamepad2, Sparkle } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 // Featured game card highlights the first planned game without implementing gameplay.
-export function FeaturedGameCard() {
+export function FeaturedGameCard({ onPlayRequest }: { onPlayRequest: () => void }) {
   return (
     <section id="featured" className="relative px-4 pb-8 sm:px-6">
       <div className="mx-auto w-full max-w-5xl">
@@ -19,13 +18,14 @@ export function FeaturedGameCard() {
                 The play room is ready to become the first LoopForge game space, with room for more modes,
                 achievements, and multiplayer portals later.
               </p>
-              <Link
-                to="/play"
+              <button
+                type="button"
+                onClick={onPlayRequest}
                 className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-full border-4 border-[#2b1745] bg-[#ff82c8] px-5 text-sm font-black text-[#2b1745] shadow-[0_7px_0_#2b1745] transition hover:-translate-y-1 hover:bg-[#ff9ed5] hover:shadow-[0_10px_0_#2b1745]"
               >
                 Open play room
                 <ArrowRight aria-hidden="true" size={18} />
-              </Link>
+              </button>
             </div>
             <div className="grid min-h-56 grid-cols-4 gap-3 rounded-[24px] border-4 border-white/20 bg-[#0d1640]/80 p-4">
               {Array.from({ length: 16 }).map((_, index) => (

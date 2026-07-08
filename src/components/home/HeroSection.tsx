@@ -11,7 +11,7 @@ const sparkles = [
 ];
 
 // Hero introduces the app hub and points to future-ready routes only.
-export function HeroSection() {
+export function HeroSection({ onPlayRequest }: { onPlayRequest: () => void }) {
   return (
     <section className="relative min-h-[760px] overflow-hidden px-4 pb-16 pt-7 sm:min-h-screen sm:px-6 lg:px-10">
       <div className="cloud cloud-one" aria-hidden="true" />
@@ -64,13 +64,14 @@ export function HeroSection() {
             <span>Login</span>
           </Link>
 
-          <Link
-            to="/play"
+          <button
+            type="button"
+            onClick={onPlayRequest}
             className="game-object play-object order-4 col-span-2 mx-auto mt-0 min-h-20 w-full max-w-[360px] text-[#2b1745] sm:col-span-1 sm:col-start-2 sm:mt-1"
           >
             <Play aria-hidden="true" size={34} fill="currentColor" />
             <span>Play</span>
-          </Link>
+          </button>
 
           <Link
             to="/friends"

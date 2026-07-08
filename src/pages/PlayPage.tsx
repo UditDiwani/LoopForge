@@ -1,4 +1,6 @@
 import { CalendarDays, Lightbulb, RotateCcw, Sparkles, Timer, Trophy, Undo2, Redo2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { GuestBanner } from '../components/auth/AuthFlow';
 import {
   AchievementBadge,
   FilterTabs,
@@ -11,9 +13,16 @@ import {
 } from '../components/ui/AppPrimitives';
 
 const cells = Array.from({ length: 49 }, (_, index) => index);
+const boardSize = 7;
+const dots = Array.from({ length: (boardSize + 1) * (boardSize + 1) }, (_, index) => index);
+const horizontalEdges = Array.from({ length: (boardSize + 1) * boardSize }, (_, index) => index);
+const verticalEdges = Array.from({ length: boardSize * (boardSize + 1) }, (_, index) => index);
 const difficulties = ['Gentle', 'Classic', 'Tricky', 'Expert'];
 
 export function PlayPage() {
+  const [searchParams] = useSearchParams();
+  const isGuestMode = searchParams.get('mode') === 'guest';
+
   return (
     <PageShell
       eyebrow="Slitherlink room"
@@ -21,6 +30,7 @@ export function PlayPage() {
       description="A polished puzzle table for the first LoopForge game. Everything here is visual placeholder content until the real Slitherlink engine arrives."
       actions={<GradientButton variant="pink">New puzzle</GradientButton>}
     >
+      {isGuestMode ? <GuestBanner /> : null}
       <div className="grid gap-6 pb-10 xl:grid-cols-[1fr_360px]">
         <GlassPanel glow="gold" className="overflow-hidden">
           <SectionHeader
@@ -28,17 +38,93 @@ export function PlayPage() {
             title="Moonlit 7 x 7 practice grid"
             action={<AchievementBadge label="42% complete" tone="gold" />}
           />
-          <div className="mx-auto grid aspect-square w-full max-w-[680px] grid-cols-7 gap-2 rounded-[30px] border-4 border-[#ffe68a]/50 bg-[#0d1640]/82 p-4 shadow-[inset_0_0_40px_rgba(127,213,255,0.12)]">
-            {cells.map((cell) => (
-              <div
-                key={cell}
-                className="relative grid aspect-square place-items-center rounded-2xl border-2 border-[#7fd5ff]/25 bg-white/[0.04] text-lg font-black text-[#fff7ca] transition hover:border-[#ffe68a]/70 hover:bg-[#ffe68a]/10"
-              >
-                {cell % 3 === 0 ? <span>{(cell % 4) + 1}</span> : null}
-                {cell % 8 === 0 ? <span className="absolute -right-1 top-1/2 h-1 w-5 rounded-full bg-[#ffe68a]" /> : null}
-                {cell % 10 === 0 ? <span className="absolute left-1/2 -bottom-1 h-5 w-1 rounded-full bg-[#ff82c8]" /> : null}
-              </div>
-            ))}
+          <div className="mx-auto aspect-square w-full max-w-[680px] rounded-[30px] border-4 border-[#ffe68a]/50 bg-[#0d1640]/82 p-6 shadow-[inset_0_0_40px_rgba(127,213,255,0.12)]">
+            <div className="relative size-full rounded-[24px] bg-white/[0.025]">
+              {cells.map((cell) => {
+                const row = Math.floor(cell / boardSize);
+                const column = cell % boardSize;
+
+                return (
+                  <div
+                    key={cell}
+                    className="pointer-events-none absolute grid place-items-center text-xl font-black text-[#fff7ca] drop-shadow-[0_0_12px_rgba(255,230,138,0.35)] sm:text-2xl"
+                    style={{
+                      left: `${(column + 0.5) * (100 / boardSize)}%`,
+                      top: `${(row + 0.5) * (100 / boardSize)}%`,
+                      width: `${100 / boardSize}%`,
+                      height: `${100 / boardSize}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  >
+                    {cell % 3 === 0 ? <span>{(cell % 4) + 1}</span> : null}
+                  </div>
+                );
+              })}
+
+              {horizontalEdges.map((edge) => {
+                const row = Math.floor(edge / boardSize);
+                const column = edge % boardSize;
+                const isActive = edge % 8 === 0 || edge % 13 === 0;
+
+                return (
+                  <button
+                    key={`h-${edge}`}
+                    type="button"
+                    aria-label={`Horizontal edge ${row + 1}, ${column + 1}`}
+                    className={`absolute h-4 rounded-full transition hover:bg-[#ffe68a] hover:shadow-[0_0_18px_rgba(255,230,138,0.65)] ${
+                      isActive ? 'bg-[#ffe68a] shadow-[0_0_14px_rgba(255,230,138,0.42)]' : 'bg-[#7fd5ff]/18'
+                    }`}
+                    style={{
+                      left: `${column * (100 / boardSize)}%`,
+                      top: `${row * (100 / boardSize)}%`,
+                      width: `${100 / boardSize}%`,
+                      transform: 'translateY(-50%) scaleX(0.72)',
+                    }}
+                  />
+                );
+              })}
+
+              {verticalEdges.map((edge) => {
+                const row = Math.floor(edge / (boardSize + 1));
+                const column = edge % (boardSize + 1);
+                const isActive = edge % 10 === 0 || edge % 17 === 0;
+
+                return (
+                  <button
+                    key={`v-${edge}`}
+                    type="button"
+                    aria-label={`Vertical edge ${row + 1}, ${column + 1}`}
+                    className={`absolute w-4 rounded-full transition hover:bg-[#ff82c8] hover:shadow-[0_0_18px_rgba(255,130,200,0.65)] ${
+                      isActive ? 'bg-[#ff82c8] shadow-[0_0_14px_rgba(255,130,200,0.42)]' : 'bg-[#7fd5ff]/18'
+                    }`}
+                    style={{
+                      left: `${column * (100 / boardSize)}%`,
+                      top: `${row * (100 / boardSize)}%`,
+                      height: `${100 / boardSize}%`,
+                      transform: 'translateX(-50%) scaleY(0.72)',
+                    }}
+                  />
+                );
+              })}
+
+              {dots.map((dot) => {
+                const row = Math.floor(dot / (boardSize + 1));
+                const column = dot % (boardSize + 1);
+
+                return (
+                  <span
+                    key={`dot-${dot}`}
+                    className="absolute z-10 size-3 rounded-full border border-[#fff7ca]/70 bg-[#fff7ca] shadow-[0_0_12px_rgba(255,230,138,0.5)] sm:size-4"
+                    style={{
+                      left: `${column * (100 / boardSize)}%`,
+                      top: `${row * (100 / boardSize)}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                    aria-hidden="true"
+                  />
+                );
+              })}
+            </div>
           </div>
           <div className="mt-6 grid gap-3 sm:grid-cols-4">
             <GradientButton variant="ghost"><Lightbulb size={18} />Hint</GradientButton>
