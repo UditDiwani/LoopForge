@@ -1,5 +1,10 @@
+import { useState } from 'react';
 import { AlertTriangle, Bell, Eye, Globe2, Lock, Moon, Palette, Volume2, Wand2 } from 'lucide-react';
-import { GlassPanel, PageShell, SectionHeader, SettingRow } from '../components/ui/AppPrimitives';
+import { useNavigate } from 'react-router-dom';
+import { LoadingButton, ValidationMessage } from '../components/auth/AuthFlow';
+import { GlassPanel, GradientButton, PageShell, SectionHeader, SettingRow } from '../components/ui/AppPrimitives';
+import { deleteCurrentUser } from '../services/authApi';
+import { clearAuthSession, getAuthSession } from '../services/authSession';
 
 const groups = [
   {
@@ -39,6 +44,31 @@ const groups = [
 ];
 
 export function SettingsPage() {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | undefined>();
+  const navigate = useNavigate();
+
+  async function handleDeleteAccount() {
+    if (!getAuthSession()) {
+      setDeleteError('Sign in or start a guest session before deleting an account.');
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(undefined);
+
+    try {
+      await deleteCurrentUser();
+      clearAuthSession();
+      navigate('/');
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Unable to delete account.');
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   return (
     <PageShell
       eyebrow="Settings"
@@ -74,7 +104,20 @@ export function SettingsPage() {
           <div className="grid gap-3 md:grid-cols-3">
             <SettingRow title="Export data" description="Placeholder control for future account export." value="Prepare" />
             <SettingRow title="Pause account" description="Placeholder control for temporarily hiding activity." value="Pause" />
-            <SettingRow title="Delete account" description="Placeholder destructive area with no active behavior." value="Locked" />
+            <button
+              type="button"
+              className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-[#0d1640]/50 p-4 text-left transition hover:border-[#ff82c8]/45 sm:flex-row sm:items-center sm:justify-between"
+              onClick={() => {
+                setDeleteError(undefined);
+                setIsDeleteModalOpen(true);
+              }}
+            >
+              <span>
+                <span className="block font-black text-white">Delete account</span>
+                <span className="mt-1 block text-sm leading-6 text-[#cfd6ff]">Permanently remove the current account or guest session.</span>
+              </span>
+              <span className="rounded-full bg-white/10 px-4 py-2 text-sm font-black text-[#ffe68a]">Delete</span>
+            </button>
           </div>
         </GlassPanel>
 
@@ -88,6 +131,51 @@ export function SettingsPage() {
           </div>
         </GlassPanel>
       </div>
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        isDeleting={isDeleting}
+        error={deleteError}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteAccount}
+      />
     </PageShell>
+  );
+}
+
+function DeleteAccountModal({
+  isOpen,
+  isDeleting,
+  error,
+  onClose,
+  onConfirm,
+}: {
+  isOpen: boolean;
+  isDeleting: boolean;
+  error?: string;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-[#05091f]/72 px-4 py-6 backdrop-blur-md">
+      <button className="absolute inset-0 cursor-default" aria-label="Close delete account confirmation" onClick={onClose} />
+      <section className="relative w-full max-w-md rounded-[28px] border-4 border-[#ff82c8]/55 bg-[#14184a]/95 p-6 text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+        <SectionHeader eyebrow="Confirm" title="Delete this account?" />
+        <p className="text-sm font-bold leading-6 text-[#d9dcff]">
+          This removes the current LoopForge user record from MongoDB. This first version does not include account recovery.
+        </p>
+        <ValidationMessage>{error}</ValidationMessage>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <GradientButton variant="ghost" onClick={onClose}>Cancel</GradientButton>
+          <LoadingButton variant="pink" isLoading={isDeleting} onClick={onConfirm}>
+            <AlertTriangle size={18} />
+            Delete account
+          </LoadingButton>
+        </div>
+      </section>
+    </div>
   );
 }

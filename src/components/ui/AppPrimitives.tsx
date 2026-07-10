@@ -200,7 +200,7 @@ export function SectionHeader({ eyebrow, title, action }: { eyebrow?: string; ti
 }
 
 export function GradientButton({ children, to, variant = 'gold', className = '', type = 'button', ...buttonProps }: GradientButtonProps) {
-  const classes = `inline-flex min-h-12 items-center justify-center gap-2 rounded-full border-4 px-5 text-sm font-black transition hover:-translate-y-1 hover:brightness-110 ${buttonStyles[variant]} ${className}`;
+  const classes = `inline-flex min-h-12 items-center justify-center gap-2 rounded-full border-4 px-5 text-sm font-black transition hover:-translate-y-1 hover:brightness-110 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 ${buttonStyles[variant]} ${className}`;
 
   if (to) {
     return (

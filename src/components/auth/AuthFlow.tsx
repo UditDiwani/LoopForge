@@ -1,5 +1,6 @@
-import type { FormEvent, InputHTMLAttributes, ReactNode } from 'react';
-import { Check, Eye, Lock, Mail, Sparkles, Star, User, UserPlus, X } from 'lucide-react';
+import { forwardRef, useState } from 'react';
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react';
+import { Check, Eye, EyeOff, Lock, Mail, Sparkles, Star, User, UserPlus, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AchievementBadge, GlassPanel, GradientButton, SectionHeader } from '../ui/AppPrimitives';
 
@@ -7,6 +8,8 @@ type AuthModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onContinueAsGuest: () => void;
+  guestError?: string;
+  isGuestLoading?: boolean;
 };
 
 type Feature = {
@@ -25,6 +28,22 @@ type AuthLayoutProps = {
 type InputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   icon?: ReactNode;
+  error?: string;
+};
+
+type LoadingButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  children: ReactNode;
+  isLoading?: boolean;
+  variant?: 'gold' | 'pink' | 'blue' | 'ghost';
+};
+
+type PasswordStrengthProps = {
+  score: number;
+};
+
+export type PasswordRequirement = {
+  label: string;
+  met: boolean;
 };
 
 const savedProgressFeatures = ['Puzzle progress', 'Statistics', 'Achievements', 'Friends', 'Multiplayer'];
@@ -39,7 +58,7 @@ const guestFeatures: Feature[] = [
   { label: 'Achievements not saved', available: false },
 ];
 
-export function AuthModal({ isOpen, onClose, onContinueAsGuest }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, onContinueAsGuest, guestError, isGuestLoading = false }: AuthModalProps) {
   if (!isOpen) {
     return null;
   }
@@ -94,10 +113,11 @@ export function AuthModal({ isOpen, onClose, onContinueAsGuest }: AuthModalProps
               Progress will only exist while this browser session remains open.
             </p>
             <FeatureList features={guestFeatures} />
-            <GradientButton variant="blue" className="mt-5 w-full" onClick={onContinueAsGuest}>
+            <LoadingButton variant="blue" className="mt-5 w-full" onClick={onContinueAsGuest} isLoading={isGuestLoading}>
               <Sparkles size={18} />
               Continue as Guest
-            </GradientButton>
+            </LoadingButton>
+            <ValidationMessage>{guestError}</ValidationMessage>
           </div>
         </div>
       </section>
@@ -160,7 +180,10 @@ export function AuthenticationCard({ children, glow = 'gold' }: { children: Reac
   return <GlassPanel glow={glow}>{children}</GlassPanel>;
 }
 
-export function InputField({ label, icon, className = '', ...props }: InputFieldProps) {
+export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(function InputField(
+  { label, icon, className = '', error, ...props },
+  ref,
+) {
   return (
     <label className="block">
       <span className="text-sm font-black text-[#fff7ca]">{label}</span>
@@ -168,23 +191,112 @@ export function InputField({ label, icon, className = '', ...props }: InputField
         {icon ? <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#ffe68a]">{icon}</span> : null}
         <input
           {...props}
+          ref={ref}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={error ? `${props.name ?? label}-error` : undefined}
           className={`min-h-12 w-full rounded-2xl border-2 border-white/15 bg-[#0d1640]/72 px-4 text-white outline-none transition placeholder:text-[#aeb7e8] focus:border-[#ffe68a]/70 ${icon ? 'pl-12' : ''} ${className}`}
         />
       </span>
+      <ValidationMessage id={`${props.name ?? label}-error`}>{error}</ValidationMessage>
+    </label>
+  );
+});
+
+export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputFieldProps, 'type' | 'icon'>>(function PasswordInput(
+  { className = '', label, error, ...props },
+  ref,
+) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <label className="block">
+      <span className="text-sm font-black text-[#fff7ca]">{label}</span>
+      <span className="relative mt-2 block">
+        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#ffe68a]">
+          <Lock size={18} aria-hidden="true" />
+        </span>
+        <input
+          {...props}
+          ref={ref}
+          type={isVisible ? 'text' : 'password'}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={error ? `${props.name ?? label}-error` : undefined}
+          className={`min-h-12 w-full rounded-2xl border-2 border-white/15 bg-[#0d1640]/72 px-12 text-white outline-none transition placeholder:text-[#aeb7e8] focus:border-[#ffe68a]/70 ${className}`}
+        />
+        <button
+          type="button"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#ffe68a] transition hover:text-[#fff7ca]"
+          aria-label={isVisible ? 'Hide password' : 'Show password'}
+          onClick={() => setIsVisible((current) => !current)}
+        >
+          {isVisible ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+        </button>
+      </span>
+      <ValidationMessage id={`${props.name ?? label}-error`}>{error}</ValidationMessage>
+    </label>
+  );
+});
+
+export function Checkbox({ children, ...props }: InputHTMLAttributes<HTMLInputElement> & { children: ReactNode }) {
+  return (
+    <label className="flex items-start gap-3 text-sm font-bold leading-6 text-[#d9dcff]">
+      <input {...props} type="checkbox" className="mt-1 size-4 accent-[#ffe68a]" />
+      {children}
     </label>
   );
 }
 
-export function PasswordInput(props: Omit<InputFieldProps, 'type' | 'icon'>) {
-  return <InputField {...props} type="password" icon={<Eye size={18} aria-hidden="true" />} />;
+export function ValidationMessage({ children, id }: { children?: string; id?: string }) {
+  return children ? (
+    <p id={id} className="mt-2 text-sm font-bold leading-5 text-[#ffd8fb]" role="status">
+      {children}
+    </p>
+  ) : null;
 }
 
-export function Checkbox({ children }: { children: ReactNode }) {
+export function PasswordStrength({ score }: PasswordStrengthProps) {
+  const labels = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong'];
+  const clampedScore = Math.max(0, Math.min(score, 4));
+
   return (
-    <label className="flex items-start gap-3 text-sm font-bold leading-6 text-[#d9dcff]">
-      <input type="checkbox" className="mt-1 size-4 accent-[#ffe68a]" />
+    <div aria-live="polite">
+      <div className="mt-3 flex gap-2">
+        {labels.map((label, index) => (
+          <span
+            key={label}
+            className={`h-2 flex-1 rounded-full ${index <= clampedScore ? 'bg-[#ffe68a]' : 'bg-white/12'}`}
+            aria-hidden="true"
+          />
+        ))}
+      </div>
+      <p className="mt-2 text-sm font-bold text-[#d9dcff]">Password strength: {labels[clampedScore]}</p>
+    </div>
+  );
+}
+
+export function PasswordRequirements({ requirements }: { requirements: PasswordRequirement[] }) {
+  return (
+    <ul className="mt-3 grid gap-2">
+      {requirements.map((requirement) => (
+        <li key={requirement.label} className="flex items-center gap-2 text-sm font-bold text-[#d9dcff]">
+          <span className={`grid size-5 place-items-center rounded-full ${requirement.met ? 'bg-[#9dffcf]/18 text-[#9dffcf]' : 'bg-white/10 text-[#aeb7e8]'}`}>
+            <Check size={13} aria-hidden="true" />
+          </span>
+          {requirement.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function LoadingButton({ children, isLoading = false, disabled, variant = 'gold', ...props }: LoadingButtonProps) {
+  return (
+    <GradientButton {...props} variant={variant} disabled={disabled || isLoading}>
+      {isLoading ? (
+        <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
+      ) : null}
       {children}
-    </label>
+    </GradientButton>
   );
 }
 
@@ -215,11 +327,6 @@ export function FeatureList({ features, compact = false }: { features: Feature[]
       ))}
     </ul>
   );
-}
-
-export function handleAuthPlaceholderSubmit(event: FormEvent<HTMLFormElement>) {
-  event.preventDefault();
-  // TODO: Connect this form to the future authentication backend.
 }
 
 export const authIcons = {
