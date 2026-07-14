@@ -17,6 +17,14 @@ import { PuzzleLoader } from '../game/PuzzleLoader';
 import { EdgeState } from '../game/types';
 
 const difficulties = ['Gentle', 'Classic', 'Tricky', 'Expert'];
+const confettiPieces = Array.from({ length: 28 }, (_, index) => ({
+  id: index,
+  left: `${8 + ((index * 13) % 84)}%`,
+  delay: `${(index % 9) * 0.12}s`,
+  duration: `${1.8 + (index % 5) * 0.18}s`,
+  color: ['#ffe68a', '#ff82c8', '#7fd5ff', '#ffffff'][index % 4],
+  rotate: `${(index * 31) % 180}deg`,
+}));
 
 export function PlayPage() {
   const [searchParams] = useSearchParams();
@@ -61,19 +69,34 @@ export function PlayPage() {
           aria-modal="true"
           aria-labelledby="completion-title"
         >
-          <div className="w-full max-w-sm rounded-[28px] border border-[#ffe68a]/55 bg-[#111a4a] p-6 text-center shadow-[0_0_42px_rgba(255,230,138,0.25)]">
-            <div className="mx-auto grid size-16 place-items-center rounded-full bg-[#ffe68a]/18 text-[#ffe68a]">
-              <Trophy size={34} />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+            {confettiPieces.map((piece) => (
+              <span
+                key={piece.id}
+                className="celebration-confetti absolute top-[-24px] h-4 w-2 rounded-sm"
+                style={{
+                  left: piece.left,
+                  backgroundColor: piece.color,
+                  animationDelay: piece.delay,
+                  animationDuration: piece.duration,
+                  transform: `rotate(${piece.rotate})`,
+                }}
+              />
+            ))}
+          </div>
+          <div className="relative w-full max-w-lg rounded-[30px] border border-[#ffe68a]/55 bg-[#111a4a] p-8 text-center shadow-[0_0_52px_rgba(255,230,138,0.3)] sm:p-10">
+            <div className="mx-auto grid size-20 place-items-center rounded-full bg-[#ffe68a]/18 text-[#ffe68a]">
+              <Trophy size={42} />
             </div>
-            <h2 id="completion-title" className="mt-4 text-2xl font-black text-white">
+            <h2 id="completion-title" className="mt-5 text-3xl font-black text-white sm:text-4xl">
               Puzzle complete
             </h2>
-            <p className="mt-2 text-sm font-bold leading-6 text-[#cfd6ff]">
-              The engine validated every clue and found one closed loop.
+            <p className="mx-auto mt-3 max-w-sm text-base font-bold leading-7 text-[#cfd6ff]">
+              Beautiful loop. Every clue lines up, and the puzzle is solved.
             </p>
             <button
               type="button"
-              className="mt-5 rounded-full bg-[#ffe68a] px-5 py-3 text-sm font-black text-[#161139] shadow-[0_0_18px_rgba(255,230,138,0.35)] transition hover:brightness-110"
+              className="mt-7 rounded-full bg-[#ffe68a] px-7 py-3 text-sm font-black text-[#161139] shadow-[0_0_18px_rgba(255,230,138,0.35)] transition hover:brightness-110"
               onClick={() => setIsCelebrationDismissed(true)}
             >
               Continue
