@@ -1,5 +1,5 @@
-import { CalendarDays, Lightbulb, RotateCcw, Sparkles, Timer, Trophy, Undo2, Redo2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { CalendarDays, Eraser, Lightbulb, Pencil, RotateCcw, Sparkles, Timer, Trophy, Undo2, Redo2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { GuestBanner } from '../components/auth/AuthFlow';
 import {
@@ -14,9 +14,21 @@ import {
 } from '../components/ui/AppPrimitives';
 import { GameController } from '../game/GameController';
 import { PuzzleLoader } from '../game/PuzzleLoader';
+import { PuzzleGenerator, type Difficulty } from '../game/generation/PuzzleGenerator';
 import { EdgeState } from '../game/types';
 
-const difficulties = ['Gentle', 'Classic', 'Tricky', 'Expert'];
+const generator = new PuzzleGenerator();
+const puzzleSize = 5;
+const difficultyOptions: Array<{ label: string; value: Difficulty }> = [
+  { label: 'Easy', value: 'easy' },
+  { label: 'Medium', value: 'medium' },
+  { label: 'Hard', value: 'hard' },
+];
+const edgeTools = [
+  { label: 'Pencil', mode: EdgeState.Line, icon: Pencil },
+  { label: 'X', mode: EdgeState.Cross, icon: X },
+  { label: 'Eraser', mode: EdgeState.Empty, icon: Eraser },
+];
 const confettiPieces = Array.from({ length: 28 }, (_, index) => ({
   id: index,
   left: `${8 + ((index * 13) % 84)}%`,
@@ -26,10 +38,18 @@ const confettiPieces = Array.from({ length: 28 }, (_, index) => ({
   rotate: `${(index * 31) % 180}deg`,
 }));
 
+function createGeneratedGameController(difficulty: Difficulty) {
+  const puzzle = generator.generate({ size: puzzleSize, difficulty });
+
+  return new GameController(PuzzleLoader.loadPuzzle(puzzle));
+}
+
 export function PlayPage() {
   const [searchParams] = useSearchParams();
   const isGuestMode = searchParams.get('mode') === 'guest';
-  const gameController = useMemo(() => new GameController(PuzzleLoader.loadEngineSamplePuzzle()), []);
+  const [activeDifficulty, setActiveDifficulty] = useState<Difficulty>('medium');
+  const [activeEdgeTool, setActiveEdgeTool] = useState<EdgeState>(EdgeState.Line);
+  const [gameController, setGameController] = useState(() => createGeneratedGameController('medium'));
   const [gameState, setGameState] = useState(() => gameController.getGameState());
   const board = gameState.board;
   const boardSize = board.size;
@@ -45,8 +65,31 @@ export function PlayPage() {
   const [isCelebrationDismissed, setIsCelebrationDismissed] = useState(false);
 
   const handleEdgeClick = (edgeId: string) => {
-    setGameState(gameController.toggleEdge(edgeId));
+    const edge = board.getEdge(edgeId);
+    const nextState =
+      activeEdgeTool === EdgeState.Line && edge?.state === EdgeState.Line ? EdgeState.Empty : activeEdgeTool;
+
+    setGameState(gameController.setEdge(edgeId, nextState));
   };
+
+  const handleNewPuzzle = () => {
+    const nextController = createGeneratedGameController(activeDifficulty);
+
+    setGameController(nextController);
+    setGameState(nextController.getGameState());
+    setIsCelebrationDismissed(false);
+  };
+
+  const handleDifficultyChange = (label: string) => {
+    const selectedDifficulty = difficultyOptions.find((difficulty) => difficulty.label === label)?.value;
+
+    if (selectedDifficulty) {
+      setActiveDifficulty(selectedDifficulty);
+    }
+  };
+
+  const activeDifficultyLabel =
+    difficultyOptions.find((difficulty) => difficulty.value === activeDifficulty)?.label ?? 'Medium';
 
   useEffect(() => {
     if (!isPuzzleComplete) {
@@ -58,8 +101,8 @@ export function PlayPage() {
     <PageShell
       eyebrow="Slitherlink room"
       title="Trace the quiet loop."
-      description="A polished puzzle table for the first LoopForge game. Everything here is visual placeholder content until the real Slitherlink engine arrives."
-      actions={<GradientButton variant="pink">New puzzle</GradientButton>}
+      description="Generated Slitherlink boards are now loaded into the game engine."
+      actions={<GradientButton variant="pink" onClick={handleNewPuzzle}>New puzzle</GradientButton>}
     >
       {isGuestMode ? <GuestBanner /> : null}
       {isPuzzleComplete && !isCelebrationDismissed ? (
@@ -111,6 +154,28 @@ export function PlayPage() {
             title={board.puzzle.name}
             action={<AchievementBadge label={`${clueProgress}% clues`} tone="gold" />}
           />
+          <div className="mb-5 flex flex-wrap gap-3">
+            {edgeTools.map(({ label, mode, icon: Icon }) => {
+              const isActive = activeEdgeTool === mode;
+
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setActiveEdgeTool(mode)}
+                  aria-pressed={isActive}
+                  className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border-2 px-4 text-sm font-black transition hover:-translate-y-0.5 ${
+                    isActive
+                      ? 'border-[#ffe68a] bg-[#ffe68a] text-[#2b1745] shadow-[0_0_18px_rgba(255,230,138,0.25)]'
+                      : 'border-white/18 bg-[#0d1640]/68 text-[#d9dcff] hover:border-[#ffe68a]/55 hover:text-[#ffe68a]'
+                  }`}
+                >
+                  <Icon aria-hidden="true" size={18} />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
           <div className="mx-auto aspect-square w-full max-w-[680px] rounded-[30px] border-4 border-[#ffe68a]/50 bg-[#0d1640]/82 p-6 shadow-[inset_0_0_40px_rgba(127,213,255,0.12)]">
             <div className="relative size-full rounded-[24px] bg-white/[0.025]">
               {cells.map((cell) => {
@@ -146,11 +211,11 @@ export function PlayPage() {
                     type="button"
                     aria-label={`Horizontal edge ${row + 1}, ${column + 1}`}
                     onClick={() => handleEdgeClick(edge.id)}
-                    className={`absolute h-4 rounded-full transition hover:bg-[#ffe68a] hover:shadow-[0_0_18px_rgba(255,230,138,0.65)] ${
+                    className={`absolute flex h-5 items-center justify-center rounded-full transition hover:bg-[#ffe68a]/35 hover:shadow-[0_0_18px_rgba(255,230,138,0.65)] ${
                       isActive
                         ? 'bg-[#ffe68a] shadow-[0_0_14px_rgba(255,230,138,0.42)]'
                         : isCrossed
-                          ? 'bg-[#ff82c8]/45'
+                          ? 'bg-transparent text-[#ff82c8]'
                           : 'bg-[#7fd5ff]/18'
                     }`}
                     style={{
@@ -159,7 +224,9 @@ export function PlayPage() {
                       width: `${100 / boardSize}%`,
                       transform: 'translateY(-50%) scaleX(0.72)',
                     }}
-                  />
+                  >
+                    {isCrossed ? <X aria-hidden="true" size={20} strokeWidth={4} /> : null}
+                  </button>
                 );
               })}
 
@@ -176,11 +243,11 @@ export function PlayPage() {
                     type="button"
                     aria-label={`Vertical edge ${row + 1}, ${column + 1}`}
                     onClick={() => handleEdgeClick(edge.id)}
-                    className={`absolute w-4 rounded-full transition hover:bg-[#ff82c8] hover:shadow-[0_0_18px_rgba(255,130,200,0.65)] ${
+                    className={`absolute flex w-5 items-center justify-center rounded-full transition hover:bg-[#ff82c8]/35 hover:shadow-[0_0_18px_rgba(255,130,200,0.65)] ${
                       isActive
                         ? 'bg-[#ff82c8] shadow-[0_0_14px_rgba(255,130,200,0.42)]'
                         : isCrossed
-                          ? 'bg-[#ffe68a]/45'
+                          ? 'bg-transparent text-[#ffe68a]'
                           : 'bg-[#7fd5ff]/18'
                     }`}
                     style={{
@@ -189,7 +256,9 @@ export function PlayPage() {
                       height: `${100 / boardSize}%`,
                       transform: 'translateX(-50%) scaleY(0.72)',
                     }}
-                  />
+                  >
+                    {isCrossed ? <X aria-hidden="true" size={20} strokeWidth={4} /> : null}
+                  </button>
                 );
               })}
 
@@ -222,7 +291,11 @@ export function PlayPage() {
         <div className="grid gap-6">
           <GlassPanel glow="blue">
             <SectionHeader eyebrow="Difficulty" title="Choose a constellation" />
-            <FilterTabs tabs={difficulties} active="Classic" />
+            <FilterTabs
+              tabs={difficultyOptions.map((difficulty) => difficulty.label)}
+              active={activeDifficultyLabel}
+              onChange={handleDifficultyChange}
+            />
             <div className="mt-5 space-y-4">
               <ProgressBar value={clueProgress} label="Clue validation" />
               <div className="grid grid-cols-2 gap-3">
@@ -249,7 +322,8 @@ export function PlayPage() {
             <SectionHeader eyebrow="Stats" title="Puzzle notes" />
             <div className="space-y-3 text-sm font-bold text-[#d9dcff]">
               <p>Grid: {boardSize} x {boardSize}</p>
-              <p>Difficulty: Classic</p>
+              <p>Difficulty: {activeDifficultyLabel}</p>
+              <p>Puzzle id: {board.puzzle.id}</p>
               <p>Clues satisfied: {satisfiedClueCount} / {clueCells.length}</p>
               <p>Loop check: {gameState.validationResult.loop.message}</p>
             </div>

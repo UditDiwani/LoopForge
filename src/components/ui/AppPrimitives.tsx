@@ -50,6 +50,7 @@ type AchievementBadgeProps = {
 type FilterTabsProps = {
   tabs: string[];
   active?: string;
+  onChange?: (tab: string) => void;
 };
 
 type AvatarProps = {
@@ -246,12 +247,14 @@ export function AchievementBadge({ label, tone = 'gold' }: AchievementBadgeProps
   );
 }
 
-export function FilterTabs({ tabs, active = tabs[0] }: FilterTabsProps) {
+export function FilterTabs({ tabs, active = tabs[0], onChange }: FilterTabsProps) {
   return (
     <div className="inline-flex flex-wrap gap-2 rounded-full border border-white/15 bg-[#0d1640]/62 p-1">
       {tabs.map((tab) => (
         <button
           key={tab}
+          type="button"
+          onClick={() => onChange?.(tab)}
           className={`min-h-9 rounded-full px-4 text-sm font-black transition ${
             tab === active ? 'bg-[#ffe68a] text-[#2b1745]' : 'text-[#d9dcff] hover:bg-white/10'
           }`}

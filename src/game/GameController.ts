@@ -1,5 +1,5 @@
 import type { Board } from './Board';
-import type { EdgeId, GameState } from './types';
+import { EdgeState, type EdgeId, type GameState } from './types';
 import { ValidationEngine } from './validation/ValidationEngine';
 
 export class GameController {
@@ -19,6 +19,13 @@ export class GameController {
 
   toggleEdge(edgeId: EdgeId) {
     this.board.toggleEdgeState(edgeId);
+    this.gameState = this.createGameState();
+
+    return this.gameState;
+  }
+
+  setEdge(edgeId: EdgeId, state: EdgeState) {
+    this.board.setEdgeState(edgeId, state);
     this.gameState = this.createGameState();
 
     return this.gameState;

@@ -63,6 +63,16 @@ export class Board {
     edge.state = this.getNextEdgeState(edge.state);
   }
 
+  setEdgeState(edgeId: EdgeId, state: EdgeState) {
+    const edge = this.edges.get(edgeId);
+
+    if (!edge) {
+      return;
+    }
+
+    edge.state = state;
+  }
+
   private buildVertices() {
     for (let row = 0; row <= this.size; row += 1) {
       for (let column = 0; column <= this.size; column += 1) {
